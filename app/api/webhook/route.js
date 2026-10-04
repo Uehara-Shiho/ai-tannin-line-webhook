@@ -1,6 +1,4 @@
-from pathlib import Path
-
-code = '''import crypto from "node:crypto";
+import crypto from "node:crypto";
 
 export const runtime = "nodejs";
 
@@ -37,9 +35,8 @@ export async function POST(request) {
     );
   }
 
-  // LINEから届いた本文を文字列のまま取得。
-  // JSON.parse等は署名検証が終わるまで行わない。
   const rawBody = await request.text();
+
   const receivedSignature =
     (request.headers.get("x-line-signature") || "").trim();
 
@@ -49,13 +46,6 @@ export async function POST(request) {
     .digest("base64");
 
   if (!safeEqual(receivedSignature, expectedSignature)) {
-    console.error("LINE signature mismatch", {
-      signatureHeaderPresent: receivedSignature.length > 0,
-      receivedSignatureLength: receivedSignature.length,
-      expectedSignatureLength: expectedSignature.length,
-      rawBodyLength: Buffer.byteLength(rawBody, "utf8"),
-    });
-
     return Response.json(
       {
         ok: false,
@@ -72,7 +62,9 @@ export async function POST(request) {
   try {
     const upstream = await fetch(appsScriptUrl, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+      },
       body: rawBody,
       redirect: "follow",
     });
@@ -80,33 +72,27 @@ export async function POST(request) {
     const upstreamText = await upstream.text();
 
     if (!upstream.ok) {
-      console.error("Apps Script upstream error", {
-        status: upstream.status,
-        bodyPreview: upstreamText.slice(0, 200),
-      });
-
       return Response.json(
         {
           ok: false,
           error: "Apps Script upstream error",
           status: upstream.status,
+          bodyPreview: upstreamText.slice(0, 200),
         },
         { status: 502 }
       );
     }
 
     return Response.json({ ok: true }, { status: 200 });
-  } catch (error) {
-    console.error("Forwarding failed", error);
 
+  } catch (error) {
     return Response.json(
-      { ok: false, error: "Forwarding failed" },
+      {
+        ok: false,
+        error: "Forwarding failed",
+        message: String(error),
+      },
       { status: 500 }
     );
   }
 }
-'''
-
-path = Path("/mnt/data/route.js")
-path.write_text(code, encoding="utf-8")
-print(path)
