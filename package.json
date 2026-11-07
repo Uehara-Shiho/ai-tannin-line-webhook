@@ -1,6 +1,5 @@
 {
-  "name": "ai-tannin-line-webhook",
-  "version": "1.0.0",
+  "name": "ai-study-coach-line-relay",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,8 +7,9 @@
     "start": "next start"
   },
   "dependencies": {
+    "@vercel/functions": "latest",
     "next": "latest",
-    "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react": "latest",
+    "react-dom": "latest"
   }
 }
